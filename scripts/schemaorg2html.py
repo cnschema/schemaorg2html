@@ -352,7 +352,10 @@ class Schema2html():
         filename = os.path.join(self.dirOutput, "{}/index.htm".format(self.site))
         with codecs.open(filename,'wb') as f:
             content = r.content
-            content = cleanAbsoluteUrl(content)
+            if self.site!= "schema.org":
+                content = re.sub(ur"<script[^>]*google.[^<]*</script>","", content)
+                content = re.sub(ur"<script[^>]+>[^<]*google.[^<]*</script>","", content)
+                content = cleanAbsoluteUrl(content)
             f.write(content)
 
 
@@ -767,7 +770,7 @@ class Schema2html():
             with codecs.open(filename, "w", encoding="utf-8") as f:
                 f.write(html)
             #print html
-            diffPage2(html, node["@id"])
+            #diffPage(html, node["@id"])
             #print filename
         pass
 
