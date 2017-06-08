@@ -50,6 +50,7 @@ def task_one_html(args):
 
     # generate html
     gen = Schema2html(args.version, args.site)
+    gen.downloadVersionLatest()
     gen.downloadDocs()
     gen.downloadSpecial()
     gen.initData()
@@ -325,6 +326,7 @@ class Schema2html():
         self.dirOutput = os.path.join(os.path.dirname(__file__), "../data/releases/{}/").format(self.version)
         self.mapNameExample = collections.defaultdict(list)
 
+
     def downloadSpecial(self):
         url = "http://code.jquery.com/jquery-1.5.1.min.js"
         r = requests.get(url)
@@ -339,13 +341,18 @@ class Schema2html():
         with codecs.open(filename,'wb') as f:
             f.write(r.content)
 
-        url = "https://schema.org/docs/full.html"
-        r = requests.get(url)
-        filename = os.path.join(self.dirOutput, "{}/docs".format(self.site), os.path.basename(url))
-        with codecs.open(filename,'wb') as f:
-            content = r.content
-            content = cleanAbsoluteUrl(content)
-            f.write(content)
+        urlsDocs = [
+            "https://schema.org/docs/full.html",
+            "https://schema.org/docs/schemas.html",
+            "https://schema.org/docs/developers.html",
+        ]
+        for url in urlsDocs:
+            r = requests.get(url)
+            filename = os.path.join(self.dirOutput, "{}/docs".format(self.site), os.path.basename(url))
+            with codecs.open(filename,'wb') as f:
+                content = r.content
+                content = cleanAbsoluteUrl(content)
+                f.write(content)
 
         url = "https://schema.org/"
         r = requests.get(url)
@@ -358,9 +365,31 @@ class Schema2html():
                 content = cleanAbsoluteUrl(content)
             f.write(content)
 
+    def downloadVersionLatest(self):
+        # from github
+        url = "https://github.com/schemaorg/schemaorg/tree/master/data/releases/{}".format(self.version)
+        r = requests.get(url)
+        logging.info(r.content)
+        filenames = re.findall(r"(data/releases/{}/[^\"]+)".format(self.version), r.content)
+
+
+        urlBase = "https://github.com/schemaorg/schemaorg/raw/master"
+        for fx in filenames:
+            filename = fx
+            url = urlBase + "/" + filename
+            logging.info(url)
+
+            filename = os.path.join(self.dirOutput, "{}/version/latest".format(self.site), os.path.basename(filename))
+            logging.info(filename)
+            ensureDir(filename)
+            with codecs.open(filename,'wb') as f:
+                content = r.content
+                f.write( content )
+
 
     def downloadDocs(self):
 
+        # from github
         url = "https://github.com/schemaorg/schemaorg/tree/master/docs"
         r = requests.get(url)
         logging.info(r.content)
